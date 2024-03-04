@@ -1,0 +1,136 @@
+ <!doctype html>
+<html>
+<head>
+    <title>TETRIS</title>
+    <style type="text/css">
+      canvas {
+          border: 1px solid black;
+          height: 100%;
+          width: 100%;
+          background-color: grey;
+      }
+      @font-face {
+      font-family: 'Outerorbit';
+      src: url('http://localhost:8081/Outerorbit-rggRL.ttf');
+      }
+      </style>
+</head>
+<body>
+   <div>Let's have fun playing tetris! Press left, right, down, quit.</div><br>
+   <div id=msg></div>
+  <script>		
+    qs = sel => document.querySelector(sel)
+    var msg = qs('#msg')
+    var send = msg => ws.send(msg)
+    var utility = (n=5, a=null) => { // handle button clicks
+      switch (n) {
+        case 1:  break
+        case 2: prog.value += 10;; break
+        case 3: loc.value = '';loc.focus();loc.click() ; break
+        case 4: msg.innerHTML=''; msg_container.style.display="none"; break
+        case 5: send('M;'+a+' help'); break
+      }}
+  </script>
+  
+  <canvas>
+  </canvas>  
+  <script>
+        var block_blue = new Image();
+        block_blue.src = "block_blue.png";
+
+        var block_gold = new Image();
+        block_gold.src = "block_gold.png";
+
+        var block_purple = new Image();
+        block_purple.src = "block_purple.png";
+
+        var block_darkblue = new Image();
+        block_darkblue.src = "block_darkblue.png";
+
+        var block_yellow = new Image();
+        block_yellow.src = "block_yellow.png";
+
+        var block_red = new Image();
+        block_red.src = "block_red.png";
+
+        var block_green = new Image();
+        block_green.src = "block_green.png";
+  </script>
+    
+  <script>
+    WIDTH = 10
+    HEIGHT = 20
+    BLOCK_SIZE = 16
+    var ws = new WebSocket('ws://127.0.0.1:8081/')
+    ws.onopen = () => {
+		msg.innerHTML='Connected'
+        ws.onmessage = event => {
+        d  = event.data.split(';') // cmd;selector;string
+		    console.log(d)
+        target = qs(d[1]); txt = d[2];
+        switch (d[0]) {
+          case 'I': target.innerHTML=txt; break
+          case 'II': ws.send(40); break //send keycode DOWN to advance piece
+          case 'IV': target.value=txt; break
+          case 'IM':  target.innerHTML=txt; target.parentElement.style.display=(txt?'block':'none'); break
+          case 'ID': e = txt.split(','); context = target.getContext('2d');  
+            target.width = window.innerWidth; target.height = 400; 
+           
+            function draw_rect_js(x,y,char){  
+              char = char.replace(/(^\s\'|\'$)/g,'');    
+              switch(char){  
+                  case 'I':
+                  context.drawImage(block_blue,x*BLOCK_SIZE,y*BLOCK_SIZE);
+                  break;
+                  case 'J':
+                  context.drawImage(block_gold,x*BLOCK_SIZE,y*BLOCK_SIZE);
+                  break;
+                  case 'T':
+                  context.drawImage(block_purple,x*BLOCK_SIZE,y*BLOCK_SIZE);
+                  break;
+                  case 'S':
+                  context.drawImage(block_darkblue,x*BLOCK_SIZE,y*BLOCK_SIZE);
+                  break;
+                  case 'L':
+                  context.drawImage(block_red,x*BLOCK_SIZE,y*BLOCK_SIZE);
+                  break;
+                  case 'O':
+                  context.drawImage(block_yellow,x*BLOCK_SIZE,y*BLOCK_SIZE);
+                  break;
+                  case 'Z':                  
+                  context.drawImage(block_green,x*BLOCK_SIZE,y*BLOCK_SIZE);
+                  break;
+                  
+              }
+              
+              return 1;
+            }
+            for (y=0; y <= HEIGHT; y++){
+                for ( x=0; x <=  WIDTH+1; x++){
+                  i = (y * (WIDTH+2)) + x;
+                  if (e[i] == 0){
+                  context.fillStyle = "black";
+                  context.fillRect((x*BLOCK_SIZE),(y*BLOCK_SIZE),BLOCK_SIZE,BLOCK_SIZE);
+                  }
+                  else if (e[i] ==1){
+                  context.fillStyle = "white";
+                  context.fillRect((x*BLOCK_SIZE),(y*BLOCK_SIZE),BLOCK_SIZE,BLOCK_SIZE);
+
+                  }
+                  else{
+                      draw_rect_js(x,y,e[i]);
+                  }
+                }
+                
+            } console.log(e[e.length -1]); context.font = "30px Outerorbit"; context.fillText(e[e.length -1],16,370); break;
+            
+            
+            
+      }  }
+	document.addEventListener("keydown", event => ws.send(event.keyCode))
+    } 
+    ws.onclose = () =>  {alert('Server has stopped. Run serve.bat to restart it. Press F5 to refresh this Then click OK.')
+                        ws = new WebSocket('ws://127.0.0.1:8081/')}
+  </script>
+</body>
+</html>
